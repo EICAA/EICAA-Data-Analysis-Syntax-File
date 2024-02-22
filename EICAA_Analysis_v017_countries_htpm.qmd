@@ -1,0 +1,2740 @@
+---
+title: "EICAA Analysis"
+author: "Bernd Ebersberger & Louisa Mach, University of Hohenheim"
+date: 3 Dec 2023
+format: 
+  html
+#  pdf:
+#    toc: true
+#    number-sections: false
+#    colorlinks: true
+#    keep-tex: true
+#    header-includes:
+#      - \usepackage{float}
+#      - \usepackage{lscape}
+#      - \usepackage{pdfpages}
+#      - \floatplacement{table}{H}
+#      - \usepackage{scrlayer-scrpage}
+#      - \cohead[{\includegraphics[width=3cm]{/Users/berndebersberger/Library/CloudStorage/Dropbox/EICAA_WP6/R-Files/images/logo-eicaa-2.png}}]{{\includegraphics[width=3cm]{/Users/berndebersberger/Library/CloudStorage/Dropbox/EICAA_WP6/R-Files/images/logo-eicaa-2.png}}}
+#     - \newcommand*\NewPage{\newpage\null\thispagestyle{empty}\newpage}
+                  
+editor: visual
+---
+
+
+```{r}
+#| echo: false
+#| warning: false
+
+rm(list = ls()) # clear the workspace - make room for data
+
+library(readr)
+library(tidyverse)
+library(data.table)
+library(xlsx)
+library(tidyxl)
+library(ggridges)
+library(ggcorrplot)
+library(igraph)
+library(viridis)
+library(colourvalues)
+library(knitr)
+library(vtable)
+library(gtsummary)
+library(gt)
+library(broom)
+library(ggplot2)
+library(modelsummary)
+library(kableExtra)
+
+tsize <- 12
+
+load(file="/Users/berndebersberger/Temp/EICAA-dat/d")
+
+# Note that this is raw scores. No z-transformation is performed on this data. 
+
+dd <- d
+
+
+```
+
+\NewPage
+
+# Preface
+
+## What is EICAA?
+
+EICAA stands for Entrepreneurial and Intrapreneurial competences Assessment Alliance. It is a European university-business collaboration that has developed sophisticated instruments to measure, analyse, and develop entrepreneurial competences. The istruments enable a more data-driven orientation of entrepreneurship education. These instruments are integrated and logically connected within the EICAA Digital Platform -- the core product of the EICAA project. Namely, the platform hosts:
+
+1.  The Competence Monitor (CM)
+
+2.  The Competence Development Kit (CDK)
+
+Both instruments can be exploited for fostering entrepreneurial competences among university students or employees (corporate or higher education). They can either be used separately or in combined form. However, we recommend a combined use to fully unleash the potential of the platform. This means that you can:
+
+-   create a self-assessment (a student or an employee survey version),
+
+-   run the assessment among your target group (students or employees)
+
+-   get an analysis of the results together with module recommendations that are based on them  (both presented inside the data dashboard of the CM)
+
+-   get automatically directed to the modules of the CDK that have been identified to be most valuable to develop entrepreneurship competence(s) among the group that underwent the self-assessment.
+
+The EICAA Digital Platform is free-of-charge. It is fully GDPR compliant and available under: <https://platform.eicaa.eu/>.
+
+To exploit it, educators or trainers only need to set up a user account.
+
+Once this is done, users can create and run as many (self-)assessments as they want. Moreover, the platform provides access to a pool of carefully compiled teaching (for students) and training (for employees) materials that educators and trainers can rely on to inspire and enrich the entrepreneurship education activities they engage in.
+
+Therefore, we invite any educator and trainer of entrepreneurship education -- with or without prior experience in the field - to become part of the EICAA community by making use of the platform.
+
+## What is this report about?
+
+This report analyses the data that was gathered during the pilot phase of the EICAA Digital Platform in 2023. Overall, 2,594 higher education students and 251 employees from 66 countries took part in the piloting of the EICAA Digital Platform. More in depth information on the EICAA Pilot Round can be found here: <https://www.eicaa.eu/results/pilot-round/>.
+
+The report starts by presenting findings on the basis of the entire pilot round sample which, however, also takes into consideration different segmentation criteria (e.g. age, gender, etc.). This initial part is complemented by an analysis on the basis of each country of the partners in the EICAA consortium. Where possible in terms of the size of the subsample, this second part takes into consideration the same segmentation criteria as the first part.
+
+## How does this report connect to other outputs of EICAA?
+
+The structure of this report is somewhat pre-determined by the information gathered from the EICAA Competence Monitor. The Competence Monitor integrates a self-assessment survey for entrepreneurship competences that was developed by the EICAA consortium. As a matter of fact, the survey is derived from a) the EICAA Competence Framework and b) the rubric system therein.
+
+1.  The EICAA Competence Framework suggests a progression to the European Entrepreneurship Competence Framework (EntreComp). It also follows the wide conceptual understanding of entrepreneurship that is integral to EntreComp and defines entrepreneurship as *„when you act upon opportunities and ideas and transform them into value for others. The value that is created can be financial, cultural, or social"*. It delineates three interconnected competence areas (Ideas & Opportunities; Resources; Into Action) and an overall of 19 entrepreneurship competences therein (see below). For more information on the EICAA Competence Framework please consult <https://www.eicaa.eu/results/competence-framework/>.
+
+2.  The EICAA rubric system is constructed upon five levels of proficiency: None, Basic, Intermediate, Advanced and Expert. It was operationalised into survey instruments (one for use among university students and one for use among business employees/practitioners). Thus, the rubric system served as a foundation for the design of a self-assessment survey of entrepreneurship competences that constitutes the data gathering part of the EICAA Competence Monitor. The survey was refined in several iterations following a Delphi process and several pre-tests. All details on the rubric as well as on the development and validation of the survey(s) can be retraced by consulting the documentation on the establishment of the EICAA Competence Monitor available here: <https://www.eicaa.eu/results/competence-monitor/>.
+
+Furthermore, the data analysis of this report was done with the programme R which provides a free software environment for statistical computing and graphics. The syntax used for our analysis can be found here: <https://www.eicaa.eu/results/pilot-round/>. 
+
+```{=tex}
+\definecolor{none}{RGB}{253,231,37}
+\definecolor{basic}{RGB}{94,201,98}
+\definecolor{inter}{RGB}{33,145,140}
+\definecolor{advan}{RGB}{59,82,139}
+\definecolor{expert}{RGB}{68,1,84}
+```
+
+\NewPage
+
+# This Report
+
+This report analyzes the data gathered in the pilot round in four steps:
+
+### 1. Analysis of key descriptive indicators of the competences
+
+In the first step of the analysis we provide insight into key descriptive indicators of the competences. In particular, we provide information about the size of the sample or subsample. We report the minimum and the maximum. We describe the central tendency of the distribution by giving the mean and the median and accompany those with the 1st quartile and the 3rd quartile and the standard deviation. This provides an analytic description of the distribution based on a set of well-known indicators.
+
+### 2. Analysis of the distribution of the competences
+
+Additionally, we report the full distribution of the responses by assuming metric nature of the measues and drawing a smoothed representation of the distribution. We color the distribution to match the EICAA coloring scheme used in the survey and other publications to highlight the different levels:
+
+-   *None* \textcolor{none}{$\blacksquare$},
+
+-   *Basic* \textcolor{basic}{$\blacksquare$},
+
+-   *Intermediate* \textcolor{inter}{$\blacksquare$},
+
+-   *Advanced* \textcolor{advan}{$\blacksquare$},
+
+-   *Expert* \textcolor{expert}{$\blacksquare$},
+
+### 3. Analysis of segments of the sample
+
+To analyze segments of the data and the competence distribution therein we break down the sample into subsamples based on gender, age group, major of the study program, and work experience.
+
+### 4. Regression analysis trying to explain the competences
+
+Finally, a regression analysis strives to explain the levels of competences based on four variables: age (measured by a dummy for the youngest age group), workexperience, master students, and female respondents.
+
+We report the regression results in tables and in visualizations where we can visually inspect significance more easily than from the confidence intervals.
+
+We report the regression analysis only for the overall sample and not for national sub-samples.
+
+\NewPage
+
+# All Countries - Student Data
+
+This is the analysis for all countries involved in the EICAA project: Austria, Belgium, Germany, Hungary, and Spain.
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# Country and country1 are not the country of the higher education institution 
+# We need a new variable when building the data that identifies the country of the higher education institution. 
+
+coa <- "DE" # coa = country of analysis
+
+d <- dd
+
+```
+
+## Summary of the Competences
+
+In the following we summarize and visualize the competences grouped by competence areas *Ideas and Opportunities*, *Resources*, and *Into Action*. We first report the standard summary statistics (minimum, 25% quantile as *x25* -, mean, median, standard deviation, 75% quantile as *x75* -, maximum). Then we provide a plot that illustrates the distribution of the competences. The color coding helps to identify the levels
+
+-   *None* \textcolor{none}{$\blacksquare$},
+
+-   *Basic* \textcolor{basic}{$\blacksquare$},
+
+-   *Intermediate* \textcolor{inter}{$\blacksquare$},
+
+-   *Advanced* \textcolor{advan}{$\blacksquare$},
+
+-   *Expert* \textcolor{expert}{$\blacksquare$},
+
+::: callout-note
+Note that the numerical values of the computations and the visualization base on the raw values of the survey. The values are not normalized or standardized as in the dashboard of the EICAA competence monitor.
+:::
+
+### Competence Areas
+
+The entrepreneurship competences of the EICAA framework consist of three different competence areas that each comprise competences which we will investigate in more detail further down in the document. These competence areas are *Ideas and Opportunities*, *Resources*, and *Into Action*.
+
+#### 
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("Res", "IaO", "IAc")], key = "variable", value = "value")
+
+sumtable(d[,c("IaO", "Res", "IAc")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Areas", note = "Note: IaO = Ideas and Opportunities, Res = Resources, IAc = Into Action") 
+
+
+
+```
+
+#### 
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("",limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+#### Competences Comparison for the Countries 
+
+Here we break down the competences on the countries involved in the EICAA project: Austria, Belgium, Spain, Germany, and Hungary. Upon closer inspection we observe some minor differences of the competence distributions across the countries.
+
+```{r}
+#| fig-cap: Competence Areas by Countries
+#| echo: false
+#| warning: false
+
+selected_countries <- c("BE", "ES", "AT", "HU", "DE")
+
+df <- d %>%
+  filter(country %in% selected_countries) %>%  # Select only the project countries
+  group_by(country) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(country) is less than 4
+  ungroup()
+
+data <- melt(df[,c("country", "IaO", "Res", "IAc")], id.vars = "country", measure.vars=c("IaO", "Res", "IAc")) %>% filter(country %in% selected_countries)
+
+data %>%  ggplot( mapping = aes(x = value, y = country, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Ideas and Opportunities
+
+The competence area *Ideas and Opportunities* comprises of the following competences: *Spotting opportunities* (spop), *Design orientation* (deor), *Creativity* (crea), *Vision* (visi), *Valuing ideas* (vaid), *Ethical and sustainable thinking* (sust).
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("visi","vaid","sust","spop","crea","deor")], key = "variable", value = "value")
+
+sumtable(d[,c("visi","vaid","sust","spop","crea","deor")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Ideas and Opportunities", note = "Note: visi = Vision, vaid = Valuing ideas, sust = Ethical and sustainable thinking, spop = Spotting opportunities, crea = Creativity, deor = Design orientation.")
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Resources
+
+The competence area *Resources* comprises of the following competences: *Self-awareness and self-efficacy* (self), *Motivation and perseverance* (moti), *Mobilising (financial) resources* (mobi), *Enterprising literacy* (litr), *Mobilising others* (othr), and *Digital competence* (dico).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("self","othr","moti","mobi","litr","dico")], key = "variable", value = "value")
+
+sumtable(d[,c("self", "othr","moti", "mobi","litr","dico")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Resources", note = "Note: self = Self-awareness and self-efficacy, othr = Mobilising others, moti = Motivation and perseverance, mobi = Mobilising resources, litr = Enterprising literacy, dico = Digital competences.")
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Into Action
+
+The competence area *Into Action* comprises of the following competences: *Taking the initiative* (init), *Planning and management* (plan), *Process management* (proc), *Coping with uncertainty, ambiguity, and risk* (cope), *Design validation and co-creation* (dval), *Working with others* (work), and *Learning through experience* (lepx).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("work","proc","plan","lepx","init", "dval", "cope")], key = "variable", value = "value")
+
+
+st(d[,c("work","proc","plan","lepx","init", "dval", "cope")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Into Action", note = "Note: work = Working with others, proc = Process management, plan = Planning and management, lepx = Learning through experience, init = Taking the initiative, dval = Design validation and co-creation, cope = Coping with uncertainty, ambiguity, and risk")
+
+
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+\newpage
+
+## Segmentation Analysis
+
+### Segmentation Based on Gender
+
+::: callout-note
+The participant's gender is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The gender is contained in the data of `r ifelse(nrow(d) == length(d$gender[!is.na(d$gender)]), "all", length(d$gender[!is.na(d$gender)]))` observations.
+:::
+
+In the table below we provide an overview of the distribution of the respondents over their self reported gender identities.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(gender = recode(gender, "<hidden>" = "hidden"))
+  st(data.frame(Gender = df$gender))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where gender takes the following values: *`r d %>%   mutate(gender = recode(gender, "<hidden>" = "hidden")) %>%   count(gender) %>%   filter(n > 3) %>%   pull(gender) %>%   na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on gender. This allows us to observe the shifting of the competences across different gender identities.
+
+We show the descriptive statistics of the competence areas broken down on gender. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different genders. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("gender", "IaO", "Res", "IAc")], group = 'gender', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Gender")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Gender
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("gender", "IaO", "Res", "IAc")], id.vars = "gender", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(gender))
+
+data %>%  ggplot( mapping = aes(x = value, y = gender, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+\newpage
+
+### Segmentation Based on Age Groups
+
+::: callout-note
+The participant's age is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. Age is contained in the data of `r ifelse(nrow(d) == length(d$ageGroup[!is.na(d$ageGroup)]), "all", length(d$ageGroup[!is.na(d$ageGroup)]))` observations.
+:::
+
+In the table below we provide an overview of the distribution of the respondents over the age groups.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden"))
+  st(data.frame(ageGroup = df$ageGroup))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following age groups: *`r d %>%   mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden")) %>%   count(ageGroup) %>%   filter(n > 3) %>%   pull(ageGroup) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on age groups. This allows us to observe the shifting of the competences across different generations of respondents.
+
+We show the descriptive statistics of the competence areas broken down on age groups. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different age groups. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("ageGroup", "IaO", "Res", "IAc")], group = 'ageGroup', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Age Groups
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("ageGroup", "IaO", "Res", "IAc")], id.vars = "ageGroup", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(ageGroup))
+
+data %>%  ggplot( mapping = aes(x = value, y = ageGroup, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+\newpage
+
+### Segmentation Based on the Major of the Study Program
+
+::: callout-note
+The participant's major field of studies may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The major field of studies is contained in the data of `r ifelse(nrow(d) == length(d$majorField[!is.na(d$majorField)]), "all", length(d$majorField[!is.na(d$majorField)]))` observations.
+:::
+
+In the table below we provide an overview of the distribution of the respondents over the fields of study.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(majorField = recode(majorField, "<hidden>" = "hidden"))
+  st(data.frame(majorField = df$majorField))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following fields of study: *`r d %>%   mutate(majorField = recode(majorField, "<hidden>" = "hidden")) %>%   count(majorField) %>%   filter(n > 3) %>%   pull(majorField) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on fields of study. This allows us to observe the shifting of the competences across different educational foci.
+
+We show the descriptive statistics of the competence areas broken down on the fields of study. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different fields of study. Please note that the competence levels are abbreviated by their first capital letter.
+
+\newpage
+
+```{r}
+#| fig-cap: Competence Areas by Major Field of Studies
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(majorField)) %>%  # Remove observations with NA in 'majorField'
+  group_by(majorField) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$majorField) <- sapply(strsplit(levels(df$majorField), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("majorField", "IaO", "Res", "IAc")], id.vars = "majorField", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(majorField))
+
+data %>%  ggplot( mapping = aes(x = value, y = majorField, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+\newpage
+
+### Segmentation Based on Work Experience
+
+::: callout-note
+The participant's work experience may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The work experience is contained in the data of `r ifelse(nrow(d) == length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]), "all", length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]))` observations.
+:::
+
+In the table below we provide an overview of the distribution of the respondents over the work experience.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden"))
+  st(data.frame(hasWorkExperience = df$hasWorkExperience))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following groups of work experience: *`r d %>%   mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden")) %>%   count(hasWorkExperience) %>%   filter(n > 3) %>%   pull(hasWorkExperience) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on work experience. This allows us to observe the shifting of the competences across different levels of work experience.
+
+We show the descriptive statistics of the competence areas broken down on work experience. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across groups with and without work experience. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'gender'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], group = 'hasWorkExperience', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Work Experience
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'majorField'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$hasWorkExperience) <- sapply(strsplit(levels(df$hasWorkExperience), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], id.vars = "hasWorkExperience", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(hasWorkExperience))
+
+data %>%  ggplot( mapping = aes(x = value, y = hasWorkExperience, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+## Regression Analysis
+
+In the regression analysis we investigate how different socio-demographic characteristics of the respondents are associated with the level of competences the respondents report. As socio-demographic competences we include in the analysis: 
+
+* _age_ (as a dummy for the youngest age group), 
+* _work experience_ (as a dummy indicating work experience of the respondents), 
+* _the level of education_ (as a dummy indicating a master program), and 
+* _gender_ (as a dummy indicating female gender). 
+
+We report the results of an OLS regresssion in tabular format where we provide the parameter estimates and the 95% confidence interval in brackets. 
+
+### Competence Area: Ideas and Opportunities
+
+```{r}
+#| tbl-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+
+# Perform regression
+d$young <- (d$ageGroup == "18-23-years")*1
+d$master <- (d$educationLevel== "masters-degree")*1
+d$workexp <- (d$hasWorkExperience=="yes")*1
+d$female <- (d$gender == "female")*1
+
+models <- list(
+  "visi" = lm(visi ~ young + workexp + master + female, data = d),
+  "vaid" = lm(vaid ~ young + workexp + master + female, data = d),
+  "sust" = lm(sust ~ young + workexp + master + female, data = d)
+)
+
+modelsummary(models, fmt=1, statistic = "[{conf.low};{conf.high}]", conf_level=0.95, gof_omit = "^(?!Num|R2|F)")
+
+
+```
+
+```{r}
+#| tbl-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+
+# Perform regression
+d$young <- (d$ageGroup == "18-23-years")*1
+d$master <- (d$educationLevel== "masters-degree")*1
+d$workexp <- (d$hasWorkExperience=="yes")*1
+d$female <- (d$gender == "female")*1
+
+models <- list(
+  "spop" = lm(spop ~ young + workexp + master + female, data = d),
+  "deor" = lm(deor ~ young + workexp + master + female, data = d),
+  "crea" = lm(crea ~ young + workexp + master + female, data = d)
+)
+
+modelsummary(models, fmt=1, statistic = "[{conf.low};{conf.high}]", conf_level=0.95, gof_omit = "^(?!Num|R2|F)")
+
+
+```
+
+```{r}
+#| fig-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+#| fig-width: 5
+#| fig-height: 8
+
+models <- list(
+  "visi" = lm(visi ~ young + workexp + master + female, data = d),
+  "vaid" = lm(vaid ~ young + workexp + master + female, data = d),
+  "sust" = lm(sust ~ young + workexp + master + female, data = d),
+  "spop" = lm(spop ~ young + workexp + master + female, data = d),
+  "deor" = lm(deor ~ young + workexp + master + female, data = d),
+  "crea" = lm(crea ~ young + workexp + master + female, data = d)
+)
+
+modelplot(models, coef_omit = 'Interc', conf_level=0.95, facet=T)
+
+
+```
+
+In the competence area Ideas and Opportunities we observe that the age of the respondent only partly affects the competences significantly. *Design Orientation* and *Spotting Opportunities* are the only competences that are significantly lower for younger respondents.
+
+Work experience, however, affects most competences in the area of Ideas and Opportunities positively and significantly. Only *Sustainable and Ethical Thinking* are not affected by work experience.
+
+Overall, the level the higher education programs such as Bachelors or Masters do not affect the respondents Ideas and Opportunity competences.
+
+An interesting picture is revealed by the parameter estimated of the female dummy variable. Female respondents have a higher level of *Sustainable and Ethical Thinking* competences. Whereas they have a lower level of *Design Orientation*, *Spotting Opportunities*, and *Valuing Ideas*.
+
+\newpage
+
+### Competence Area: Resources
+
+```{r}
+#| tbl-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+
+# Perform regression
+d$young <- (d$ageGroup == "18-23-years")*1
+d$master <- (d$educationLevel== "masters-degree")*1
+d$workexp <- (d$hasWorkExperience=="yes")*1
+d$female <- (d$gender == "female")*1
+
+models <- list(
+  "self" = lm(self ~ young + workexp + master + female, data = d),
+  "othr" = lm(othr ~ young + workexp + master + female, data = d),
+  "moti" = lm(moti ~ young + workexp + master + female, data = d)
+)
+
+modelsummary(models, fmt=1, statistic = "[{conf.low};{conf.high}]", conf_level=0.95, gof_omit = "^(?!Num|R2|F)")
+
+
+```
+
+```{r}
+#| tbl-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+
+# Perform regression
+d$young <- (d$ageGroup == "18-23-years")*1
+d$master <- (d$educationLevel== "masters-degree")*1
+d$workexp <- (d$hasWorkExperience=="yes")*1
+d$female <- (d$gender == "female")*1
+
+models <- list(
+  "mobi" = lm(mobi ~ young + workexp + master + female, data = d),
+  "litr" = lm(litr ~ young + workexp + master + female, data = d),
+  "dico" = lm(dico ~ young + workexp + master + female, data = d)
+)
+
+modelsummary(models, fmt=1, statistic = "[{conf.low};{conf.high}]", conf_level=0.95, gof_omit = "^(?!Num|R2|F)")
+
+
+```
+
+```{r}
+#| fig-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+#| fig-width: 5
+#| fig-height: 8
+
+models <- list(
+  "self" = lm(self ~ young + workexp + master + female, data = d),
+  "othr" = lm(othr ~ young + workexp + master + female, data = d),
+  "moti" = lm(moti ~ young + workexp + master + female, data = d),
+  "mobi" = lm(mobi ~ young + workexp + master + female, data = d),
+  "litr" = lm(litr ~ young + workexp + master + female, data = d),
+  "dico" = lm(dico ~ young + workexp + master + female, data = d)
+)
+
+
+modelplot(models, coef_omit = 'Interc', conf_level=0.95, facet=T)
+
+
+```
+
+In the competence area Resources, we only see a difference between younger and older respondent in the level of the *Digital Competences*. All other competences in this area are not associated with age.
+
+Work experience, however, is positively associated with all of the competences in this area: *Digital Competences*, *Enterprising Literacy*, *Mobilizing Ressources*, *Motivation*, *Mobilizing Others*, and *Self Efficacy*.
+
+Master students (as compared to Bachelor students) report a higher level of *Enterprising Literacy*.
+
+Female students report significantly lower levels of *Enterprising Literacy*, *Mobilizing Resources*, and *Motivating Others*.
+
+\newpage
+
+### Competence Area: Into Action
+
+```{r}
+#| tbl-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+
+# Perform regression
+d$young <- (d$ageGroup == "18-23-years")*1
+d$master <- (d$educationLevel== "masters-degree")*1
+d$workexp <- (d$hasWorkExperience=="yes")*1
+d$female <- (d$gender == "female")*1
+
+models <- list(
+  "work" = lm(work ~ young + workexp + master + female, data = d),
+  "proc" = lm(proc ~ young + workexp + master + female, data = d),
+  "plan" = lm(plan ~ young + workexp + master + female, data = d)
+)
+
+modelsummary(models, fmt=1, statistic = "[{conf.low};{conf.high}]", conf_level=0.95, gof_omit = "^(?!Num|R2|F)")
+
+
+```
+
+```{r}
+#| tbl-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+
+# Perform regression
+d$young <- (d$ageGroup == "18-23-years")*1
+d$master <- (d$educationLevel== "masters-degree")*1
+d$workexp <- (d$hasWorkExperience=="yes")*1
+d$female <- (d$gender == "female")*1
+
+models <- list(
+  "lepx" = lm(lepx ~ young + workexp + master + female, data = d),
+  "init" = lm(init ~ young + workexp + master + female, data = d),
+  "dval" = lm(dval ~ young + workexp + master + female, data = d),
+  "cope" = lm(cope ~ young + workexp + master + female, data = d)
+)
+
+modelsummary(models, fmt=1, statistic = "[{conf.low};{conf.high}]", conf_level=0.95, gof_omit = "^(?!Num|R2|F)")
+
+
+```
+
+```{r}
+#| fig-cap: Regression on socio-demographic characteristics
+#| echo: false
+#| warning: false
+#| fig-width: 5
+#| fig-height: 8
+
+models <- list(
+  "work" = lm(work ~ young + workexp + master + female, data = d),
+  "proc" = lm(proc ~ young + workexp + master + female, data = d),
+  "plan" = lm(plan ~ young + workexp + master + female, data = d),
+  "lepx" = lm(lepx ~ young + workexp + master + female, data = d),
+  "init" = lm(init ~ young + workexp + master + female, data = d),
+  "dval" = lm(dval ~ young + workexp + master + female, data = d),
+  "cope" = lm(cope ~ young + workexp + master + female, data = d)
+)
+
+modelplot(models, coef_omit = 'Interc', conf_level=0.95, facet=T)
+
+```
+
+In the competence area of *Into Action*,younger respondents report higher levels of competences in *Learning through experience*, *Planning and management*, *Process management*, and *Coping with uncertainty, ambiguity and risk*.
+
+Work experience is associated with higher levels of competences in the *Into Action* area: *Taking the initiative* , *Planning and management* , *Process management* , *Coping with uncertainty, ambiguity, and risk*, *Working with others* , and *Learning through experience* (lepx). The only exception here is *Design validation* which is not associated significantly with work experience.
+
+Master programs are associated with a more diverse profile of competences. They are associated with lower levels of *Design validation and co-creation*, and with higher levels of *Taking the initiative* and *Planning and management*,.
+
+Female respondents show a lower level of *Coping with uncertainty, ambiguity, and risk* and a lower level of *Design validation* competences. Yet, they report higher levels of *Planning and management* and *Working with others*.
+
+\NewPage
+
+# Austria
+
+\[This analysis is based on the reported nationality of the respondent regardless of the location of the HEI the respondent is currently attending\]
+
+This is the analysis for all countries involved in the EICAA project: Austria, Belgium, Germany, Hungary, and Spain.
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# Country and country1 are not the country of the higher education institution 
+# We need a new variable when building the data that identifies the country of the higher education institution. 
+
+coa <- "AT" # coa = country of analysis
+
+d <- dd[dd$country == coa,]
+
+```
+
+## Summary of the Competences
+
+```{=tex}
+\definecolor{none}{RGB}{253,231,37}
+\definecolor{basic}{RGB}{94,201,98}
+\definecolor{inter}{RGB}{33,145,140}
+\definecolor{advan}{RGB}{59,82,139}
+\definecolor{expert}{RGB}{68,1,84}
+```
+In the following we summarize and visualize the competences grouped by competence areas *Ideas and Opportunities*, *Resources*, and *Into Action*. We first report the standard summary statistics (minimum, 25% quantile as *x25* -, mean, median, standard deviation, 75% quantile as *x75* -, maximum). Then we provide a plot that illustrates the distribution of the competences. The color coding helps to identify the levels *None* \textcolor{none}{$\blacksquare$}, *Basic* \textcolor{basic}{$\blacksquare$}, *Intermediate* \textcolor{inter}{$\blacksquare$}, *Advanced* \textcolor{advan}{$\blacksquare$}, *Expert* \textcolor{expert}{$\blacksquare$},
+
+Note that the numerical values of the computations and the visualization base on the raw values of the survey. The values are not normalized or standardized as in the dashboard of the EICAA competence monitor.
+
+### Competence Areas
+
+The entrepreneurship competences of the EICAA framework consist of three different competence areas that each comprise competences which we will investigate in more detail further down in the document. These competence areas are *Ideas and Opportunities*, *Resources*, and *Into Action*.
+
+#### Summary Statistics
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("Res", "IaO", "IAc")], key = "variable", value = "value")
+
+sumtable(d[,c("IaO", "Res", "IAc")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Areas", note = "Note: IaO = Ideas and Opportunities, Res = Resources, IAc = Into Action") 
+
+
+
+```
+
+#### Distributions
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("",limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Ideas and Opportunities
+
+The competence area *Ideas and Opportunities* comprises of the following competences: *Spotting opportunities* (spop), *Design orientation* (deor), *Creativity* (crea), *Vision* (visi), *Valuing ideas* (vaid), *Ethical and sustainable thinking* (sust).
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("visi","vaid","sust","spop","crea","deor")], key = "variable", value = "value")
+
+sumtable(d[,c("visi","vaid","sust","spop","crea","deor")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Ideas and Opportunities", note = "Note: visi = Vision, vaid = Valuing ideas, sust = Ethical and sustainable thinking, spop = Spotting opportunities, crea = Creativity, deor = Design orientation.")
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Resources
+
+The competence area *Resources* comprises of the following competences: *Self-awareness and self-efficacy* (self), *Motivation and perseverance* (moti), *Mobilising (financial) resources* (mobi), *Enterprising literacy* (litr), *Mobilising others* (othr), and *Digital competence* (dico).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("self","othr","moti","mobi","litr","dico")], key = "variable", value = "value")
+
+sumtable(d[,c("self", "othr","moti", "mobi","litr","dico")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Resources", note = "Note: self = Self-awareness and self-efficacy, othr = Mobilising others, moti = Motivation and perseverance, mobi = Mobilising resources, litr = Enterprising literacy, dico = Digital competences.")
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Into Action
+
+The competence area *Into Action* comprises of the following competences: *Taking the initiative* (init), *Planning and management* (plan), *Process management* (proc), *Coping with uncertainty, ambiguity, and risk* (cope), *Design validation and co-creation* (dval), *Working with others* (work), and *Learning through experience* (lepx).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("work","proc","plan","lepx","init", "dval", "cope")], key = "variable", value = "value")
+
+
+st(d[,c("work","proc","plan","lepx","init", "dval", "cope")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Into Action", note = "Note: work = Working with others, proc = Process management, plan = Planning and management, lepx = Learning through experience, init = Taking the initiative, dval = Design validation and co-creation, cope = Coping with uncertainty, ambiguity, and risk")
+
+
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+\newpage
+
+## Segmentation Analysis
+
+### Segmentation Based on Gender
+
+The participant's gender is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The gender is contained in the data of `r ifelse(nrow(d) == length(d$gender[!is.na(d$gender)]), "all", length(d$gender[!is.na(d$gender)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over their self reported gender identities.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(gender = recode(gender, "<hidden>" = "hidden"))
+  st(data.frame(Gender = df$gender))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where gender takes the following values: *`r d %>%   mutate(gender = recode(gender, "<hidden>" = "hidden")) %>%   count(gender) %>%   filter(n > 3) %>%   pull(gender) %>%   na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on gender. This allows us to observe the shifting of the competences across different gender identities.
+
+We show the descriptive statistics of the competence areas broken down on gender. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different genders. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("gender", "IaO", "Res", "IAc")], group = 'gender', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Gender")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Gender
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("gender", "IaO", "Res", "IAc")], id.vars = "gender", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(gender))
+
+data %>%  ggplot( mapping = aes(x = value, y = gender, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+\newpage
+
+### Segmentation Based on Age Groups
+
+The participant's age is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. Age is contained in the data of `r ifelse(nrow(d) == length(d$ageGroup[!is.na(d$ageGroup)]), "all", length(d$ageGroup[!is.na(d$ageGroup)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the age groups.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden"))
+  st(data.frame(ageGroup = df$ageGroup))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following age groups: *`r d %>%   mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden")) %>%   count(ageGroup) %>%   filter(n > 3) %>%   pull(ageGroup) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on age groups. This allows us to observe the shifting of the competences across different generations of respondents.
+
+We show the descriptive statistics of the competence areas broken down on age groups. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different age groups. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("ageGroup", "IaO", "Res", "IAc")], group = 'ageGroup', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Age Groups
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("ageGroup", "IaO", "Res", "IAc")], id.vars = "ageGroup", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(ageGroup))
+
+data %>%  ggplot( mapping = aes(x = value, y = ageGroup, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+\newpage
+
+### Segmentation Based on the Major of the Study Program
+
+The participant's major field of studies may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The major field of studies is contained in the data of `r ifelse(nrow(d) == length(d$majorField[!is.na(d$majorField)]), "all", length(d$majorField[!is.na(d$majorField)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the fields of study.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(majorField = recode(majorField, "<hidden>" = "hidden"))
+  st(data.frame(majorField = df$majorField))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following fields of study: *`r d %>%   mutate(majorField = recode(majorField, "<hidden>" = "hidden")) %>%   count(majorField) %>%   filter(n > 3) %>%   pull(majorField) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on age groups. This allows us to observe the shifting of the competences across different study fields of the respondents.
+
+We show the descriptive statistics of the competence areas broken down on the fields of study. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different fields of study. Please note that the competence levels are abbreviated by their first capital letter.
+
+\newpage
+
+```{r}
+#| fig-cap: Competence Areas by Major Field of Studies
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(majorField)) %>%  # Remove observations with NA in 'majorField'
+  group_by(majorField) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$majorField) <- sapply(strsplit(levels(df$majorField), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("majorField", "IaO", "Res", "IAc")], id.vars = "majorField", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(majorField))
+
+data %>%  ggplot( mapping = aes(x = value, y = majorField, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+\newpage
+
+### Segmentation Based on Work Experience
+
+The participant's work experience may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The work experience is contained in the data of `r ifelse(nrow(d) == length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]), "all", length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the age groups.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden"))
+  st(data.frame(hasWorkExperience = df$hasWorkExperience))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following groups of work experience: *`r d %>%   mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden")) %>%   count(hasWorkExperience) %>%   filter(n > 3) %>%   pull(hasWorkExperience) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on work experience. This allows us to observe the shifting of the competences across different levels of work experience of respondents.
+
+We show the descriptive statistics of the competence areas broken down on work experience. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across groups with and without work experience. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'gender'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], group = 'hasWorkExperience', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Work Experience
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'majorField'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$hasWorkExperience) <- sapply(strsplit(levels(df$hasWorkExperience), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], id.vars = "hasWorkExperience", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(hasWorkExperience))
+
+data %>%  ggplot( mapping = aes(x = value, y = hasWorkExperience, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+\NewPage
+
+\NewPage
+
+# Belgium
+
+This is the analysis for all countries involved in the EICAA project: Austria, Belgium, Germany, Hungary, and Spain.
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# Country and country1 are not the country of the higher education institution 
+# We need a new variable when building the data that identifies the country of the higher education institution. 
+
+coa <- "BE" # coa = country of analysis
+
+d <- dd[dd$country == coa,]
+
+```
+
+## Summary of the Competences
+
+```{=tex}
+\definecolor{none}{RGB}{253,231,37}
+\definecolor{basic}{RGB}{94,201,98}
+\definecolor{inter}{RGB}{33,145,140}
+\definecolor{advan}{RGB}{59,82,139}
+\definecolor{expert}{RGB}{68,1,84}
+```
+In the following we summarize and visualize the competences grouped by competence areas *Ideas and Opportunities*, *Resources*, and *Into Action*. We first report the standard summary statistics (minimum, 25% quantile as *x25* -, mean, median, standard deviation, 75% quantile as *x75* -, maximum). Then we provide a plot that illustrates the distribution of the competences. The color coding helps to identify the levels *None* \textcolor{none}{$\blacksquare$}, *Basic* \textcolor{basic}{$\blacksquare$}, *Intermediate* \textcolor{inter}{$\blacksquare$}, *Advanced* \textcolor{advan}{$\blacksquare$}, *Expert* \textcolor{expert}{$\blacksquare$},
+
+Note that the numerical values of the computations and the visualization base on the raw values of the survey. The values are not normalized or standardized as in the dashboard of the EICAA competence monitor.
+
+### Competence Areas
+
+The entrepreneurship competences of the EICAA framework consist of three different competence areas that each comprise competences which we will investigate in more detail further down in the document. These competence areas are *Ideas and Opportunities*, *Resources*, and *Into Action*.
+
+#### Summary Statistics
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("Res", "IaO", "IAc")], key = "variable", value = "value")
+
+sumtable(d[,c("IaO", "Res", "IAc")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Areas", note = "Note: IaO = Ideas and Opportunities, Res = Resources, IAc = Into Action") 
+
+
+
+```
+
+#### Distributions
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("",limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Ideas and Opportunities
+
+The competence area *Ideas and Opportunities* comprises of the following competences: *Spotting opportunities* (spop), *Design orientation* (deor), *Creativity* (crea), *Vision* (visi), *Valuing ideas* (vaid), *Ethical and sustainable thinking* (sust).
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("visi","vaid","sust","spop","crea","deor")], key = "variable", value = "value")
+
+sumtable(d[,c("visi","vaid","sust","spop","crea","deor")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Ideas and Opportunities", note = "Note: visi = Vision, vaid = Valuing ideas, sust = Ethical and sustainable thinking, spop = Spotting opportunities, crea = Creativity, deor = Design orientation.")
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Resources
+
+The competence area *Resources* comprises of the following competences: *Self-awareness and self-efficacy* (self), *Motivation and perseverance* (moti), *Mobilising (financial) resources* (mobi), *Enterprising literacy* (litr), *Mobilising others* (othr), and *Digital competence* (dico).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("self","othr","moti","mobi","litr","dico")], key = "variable", value = "value")
+
+sumtable(d[,c("self", "othr","moti", "mobi","litr","dico")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Resources", note = "Note: self = Self-awareness and self-efficacy, othr = Mobilising others, moti = Motivation and perseverance, mobi = Mobilising resources, litr = Enterprising literacy, dico = Digital competences.")
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Into Action
+
+The competence area *Into Action* comprises of the following competences: *Taking the initiative* (init), *Planning and management* (plan), *Process management* (proc), *Coping with uncertainty, ambiguity, and risk* (cope), *Design validation and co-creation* (dval), *Working with others* (work), and *Learning through experience* (lepx).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("work","proc","plan","lepx","init", "dval", "cope")], key = "variable", value = "value")
+
+
+st(d[,c("work","proc","plan","lepx","init", "dval", "cope")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Into Action", note = "Note: work = Working with others, proc = Process management, plan = Planning and management, lepx = Learning through experience, init = Taking the initiative, dval = Design validation and co-creation, cope = Coping with uncertainty, ambiguity, and risk")
+
+
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+## Segmentation Analysis
+
+The segmentation analysis cannot be performed in a meaningful way based on the number of observations.
+
+
+\NewPage
+
+# Germany
+
+This is the analysis for all countries involved in the EICAA project: Austria, Belgium, Germany, Hungary, and Spain.
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# Country and country1 are not the country of the higher education institution 
+# We need a new variable when building the data that identifies the country of the higher education institution. 
+
+coa <- "DE" # coa = country of analysis
+
+d <- dd[dd$country == coa,]
+
+```
+
+## Summary of the Competences
+
+```{=tex}
+\definecolor{none}{RGB}{253,231,37}
+\definecolor{basic}{RGB}{94,201,98}
+\definecolor{inter}{RGB}{33,145,140}
+\definecolor{advan}{RGB}{59,82,139}
+\definecolor{expert}{RGB}{68,1,84}
+```
+In the following we summarize and visualize the competences grouped by competence areas *Ideas and Opportunities*, *Resources*, and *Into Action*. We first report the standard summary statistics (minimum, 25% quantile as *x25* -, mean, median, standard deviation, 75% quantile as *x75* -, maximum). Then we provide a plot that illustrates the distribution of the competences. The color coding helps to identify the levels *None* \textcolor{none}{$\blacksquare$}, *Basic* \textcolor{basic}{$\blacksquare$}, *Intermediate* \textcolor{inter}{$\blacksquare$}, *Advanced* \textcolor{advan}{$\blacksquare$}, *Expert* \textcolor{expert}{$\blacksquare$},
+
+Note that the numerical values of the computations and the visualization base on the raw values of the survey. The values are not normalized or standardized as in the dashboard of the EICAA competence monitor.
+
+### Competence Areas
+
+The entrepreneurship competences of the EICAA framework consist of three different competence areas that each comprise competences which we will investigate in more detail further down in the document. These competence areas are *Ideas and Opportunities*, *Resources*, and *Into Action*.
+
+#### Summary Statistics
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("Res", "IaO", "IAc")], key = "variable", value = "value")
+
+sumtable(d[,c("IaO", "Res", "IAc")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Areas", note = "Note: IaO = Ideas and Opportunities, Res = Resources, IAc = Into Action") 
+
+
+
+```
+
+#### Distributions
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("",limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Ideas and Opportunities
+
+The competence area *Ideas and Opportunities* comprises of the following competences: *Spotting opportunities* (spop), *Design orientation* (deor), *Creativity* (crea), *Vision* (visi), *Valuing ideas* (vaid), *Ethical and sustainable thinking* (sust).
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("visi","vaid","sust","spop","crea","deor")], key = "variable", value = "value")
+
+sumtable(d[,c("visi","vaid","sust","spop","crea","deor")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Ideas and Opportunities", note = "Note: visi = Vision, vaid = Valuing ideas, sust = Ethical and sustainable thinking, spop = Spotting opportunities, crea = Creativity, deor = Design orientation.")
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Resources
+
+The competence area *Resources* comprises of the following competences: *Self-awareness and self-efficacy* (self), *Motivation and perseverance* (moti), *Mobilising (financial) resources* (mobi), *Enterprising literacy* (litr), *Mobilising others* (othr), and *Digital competence* (dico).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("self","othr","moti","mobi","litr","dico")], key = "variable", value = "value")
+
+sumtable(d[,c("self", "othr","moti", "mobi","litr","dico")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Resources", note = "Note: self = Self-awareness and self-efficacy, othr = Mobilising others, moti = Motivation and perseverance, mobi = Mobilising resources, litr = Enterprising literacy, dico = Digital competences.")
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Into Action
+
+The competence area *Into Action* comprises of the following competences: *Taking the initiative* (init), *Planning and management* (plan), *Process management* (proc), *Coping with uncertainty, ambiguity, and risk* (cope), *Design validation and co-creation* (dval), *Working with others* (work), and *Learning through experience* (lepx).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("work","proc","plan","lepx","init", "dval", "cope")], key = "variable", value = "value")
+
+
+st(d[,c("work","proc","plan","lepx","init", "dval", "cope")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Into Action", note = "Note: work = Working with others, proc = Process management, plan = Planning and management, lepx = Learning through experience, init = Taking the initiative, dval = Design validation and co-creation, cope = Coping with uncertainty, ambiguity, and risk")
+
+
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+## Segmentation Analysis
+
+### Segmentation Based on Gender
+
+The participant's gender is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The gender is contained in the data of `r ifelse(nrow(d) == length(d$gender[!is.na(d$gender)]), "all", length(d$gender[!is.na(d$gender)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over their self reported gender identities.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(gender = recode(gender, "<hidden>" = "hidden"))
+  st(data.frame(Gender = df$gender))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where gender takes the following values: *`r d %>%   mutate(gender = recode(gender, "<hidden>" = "hidden")) %>%   count(gender) %>%   filter(n > 3) %>%   pull(gender) %>%   na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on gender. This allows us to observe the shifting of the competences across different gender identities.
+
+We show the descriptive statistics of the competence areas broken down on gender. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different genders. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("gender", "IaO", "Res", "IAc")], group = 'gender', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Gender")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Gender
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("gender", "IaO", "Res", "IAc")], id.vars = "gender", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(gender))
+
+data %>%  ggplot( mapping = aes(x = value, y = gender, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+### Segmentation Based on Age Groups
+
+The participant's age is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. Age is contained in the data of `r ifelse(nrow(d) == length(d$ageGroup[!is.na(d$ageGroup)]), "all", length(d$ageGroup[!is.na(d$ageGroup)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the age groups.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden"))
+  st(data.frame(ageGroup = df$ageGroup))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following age groups: *`r d %>%   mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden")) %>%   count(ageGroup) %>%   filter(n > 3) %>%   pull(ageGroup) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on age groups. This allows us to observe the shifting of the competences across different generations of respondents.
+
+We show the descriptive statistics of the competence areas broken down on age groups. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different age groups. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("ageGroup", "IaO", "Res", "IAc")], group = 'ageGroup', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Age Groups
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("ageGroup", "IaO", "Res", "IAc")], id.vars = "ageGroup", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(ageGroup))
+
+data %>%  ggplot( mapping = aes(x = value, y = ageGroup, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+### Segmentation Based on the Major of the Study Program
+
+The participant's major field of studies may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The major field of studies is contained in the data of `r ifelse(nrow(d) == length(d$majorField[!is.na(d$majorField)]), "all", length(d$majorField[!is.na(d$majorField)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the fields of study.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(majorField = recode(majorField, "<hidden>" = "hidden"))
+  st(data.frame(majorField = df$majorField))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following fields of study: *`r d %>%   mutate(majorField = recode(majorField, "<hidden>" = "hidden")) %>%   count(majorField) %>%   filter(n > 3) %>%   pull(majorField) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on fields of study. This allows us to observe the shifting of the competences across different fields of study.
+
+We show the descriptive statistics of the competence areas broken down on the fields of study. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different fields of study. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| fig-cap: Competence Areas by Major Field of Studies
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(majorField)) %>%  # Remove observations with NA in 'majorField'
+  group_by(majorField) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$majorField) <- sapply(strsplit(levels(df$majorField), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("majorField", "IaO", "Res", "IAc")], id.vars = "majorField", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(majorField))
+
+data %>%  ggplot( mapping = aes(x = value, y = majorField, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+### Segmentation Based on Work Experience
+
+The participant's work experience may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The work experience is contained in the data of `r ifelse(nrow(d) == length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]), "all", length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the work experience.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden"))
+  st(data.frame(hasWorkExperience = df$hasWorkExperience))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following groups of workexperience: *`r d %>%   mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden")) %>%   count(hasWorkExperience) %>%   filter(n > 3) %>%   pull(hasWorkExperience) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on work experience. This allows us to observe the shifting of the competences across different levels of work experience of the respondents.
+
+We show the descriptive statistics of the competence areas broken down on work experience. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across groups with and without work experience. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'gender'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], group = 'hasWorkExperience', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Work Experience
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'majorField'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$hasWorkExperience) <- sapply(strsplit(levels(df$hasWorkExperience), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], id.vars = "hasWorkExperience", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(hasWorkExperience))
+
+data %>%  ggplot( mapping = aes(x = value, y = hasWorkExperience, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+
+\NewPage
+
+\NewPage
+
+# Hungary
+
+This is the analysis for all countries involved in the EICAA project: Austria, Belgium, Germany, Hungary, and Spain.
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# Country and country1 are not the country of the higher education institution 
+# We need a new variable when building the data that identifies the country of the higher education institution. 
+
+coa <- "HU" # coa = country of analysis
+
+d <- dd[dd$country == coa,]
+
+```
+
+## Summary of the Competences
+
+```{=tex}
+\definecolor{none}{RGB}{253,231,37}
+\definecolor{basic}{RGB}{94,201,98}
+\definecolor{inter}{RGB}{33,145,140}
+\definecolor{advan}{RGB}{59,82,139}
+\definecolor{expert}{RGB}{68,1,84}
+```
+In the following we summarize and visualize the competences grouped by competence areas *Ideas and Opportunities*, *Resources*, and *Into Action*. We first report the standard summary statistics (minimum, 25% quantile as *x25* -, mean, median, standard deviation, 75% quantile as *x75* -, maximum). Then we provide a plot that illustrates the distribution of the competences. The color coding helps to identify the levels *None* \textcolor{none}{$\blacksquare$}, *Basic* \textcolor{basic}{$\blacksquare$}, *Intermediate* \textcolor{inter}{$\blacksquare$}, *Advanced* \textcolor{advan}{$\blacksquare$}, *Expert* \textcolor{expert}{$\blacksquare$},
+
+Note that the numerical values of the computations and the visualization base on the raw values of the survey. The values are not normalized or standardized as in the dashboard of the EICAA competence monitor.
+
+### Competence Areas
+
+The entrepreneurship competences of the EICAA framework consist of three different competence areas that each comprise competences which we will investigate in more detail further down in the document. These competence areas are *Ideas and Opportunities*, *Resources*, and *Into Action*.
+
+#### Summary Statistics
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("Res", "IaO", "IAc")], key = "variable", value = "value")
+
+sumtable(d[,c("IaO", "Res", "IAc")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Areas", note = "Note: IaO = Ideas and Opportunities, Res = Resources, IAc = Into Action") 
+
+
+
+```
+
+#### Distributions
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("",limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Ideas and Opportunities
+
+The competence area *Ideas and Opportunities* comprises of the following competences: *Spotting opportunities* (spop), *Design orientation* (deor), *Creativity* (crea), *Vision* (visi), *Valuing ideas* (vaid), *Ethical and sustainable thinking* (sust).
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("visi","vaid","sust","spop","crea","deor")], key = "variable", value = "value")
+
+sumtable(d[,c("visi","vaid","sust","spop","crea","deor")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Ideas and Opportunities", note = "Note: visi = Vision, vaid = Valuing ideas, sust = Ethical and sustainable thinking, spop = Spotting opportunities, crea = Creativity, deor = Design orientation.")
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Resources
+
+The competence area *Resources* comprises of the following competences: *Self-awareness and self-efficacy* (self), *Motivation and perseverance* (moti), *Mobilising (financial) resources* (mobi), *Enterprising literacy* (litr), *Mobilising others* (othr), and *Digital competence* (dico).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("self","othr","moti","mobi","litr","dico")], key = "variable", value = "value")
+
+sumtable(d[,c("self", "othr","moti", "mobi","litr","dico")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Resources", note = "Note: self = Self-awareness and self-efficacy, othr = Mobilising others, moti = Motivation and perseverance, mobi = Mobilising resources, litr = Enterprising literacy, dico = Digital competences.")
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Into Action
+
+The competence area *Into Action* comprises of the following competences: *Taking the initiative* (init), *Planning and management* (plan), *Process management* (proc), *Coping with uncertainty, ambiguity, and risk* (cope), *Design validation and co-creation* (dval), *Working with others* (work), and *Learning through experience* (lepx).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("work","proc","plan","lepx","init", "dval", "cope")], key = "variable", value = "value")
+
+
+st(d[,c("work","proc","plan","lepx","init", "dval", "cope")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Into Action", note = "Note: work = Working with others, proc = Process management, plan = Planning and management, lepx = Learning through experience, init = Taking the initiative, dval = Design validation and co-creation, cope = Coping with uncertainty, ambiguity, and risk")
+
+
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+## Segmentation Analysis
+
+### Segmentation Based on Gender
+
+The participant's gender is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The gender is contained in the data of `r ifelse(nrow(d) == length(d$gender[!is.na(d$gender)]), "all", length(d$gender[!is.na(d$gender)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over their self reported gender identities.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(gender = recode(gender, "<hidden>" = "hidden"))
+  st(data.frame(Gender = df$gender))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where gender takes the following values: *`r d %>%   mutate(gender = recode(gender, "<hidden>" = "hidden")) %>%   count(gender) %>%   filter(n > 3) %>%   pull(gender) %>%   na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on gender. This allows us to observe the shifting of the competences across different gender identities.
+
+We show the descriptive statistics of the competence areas broken down on gender. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different genders. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("gender", "IaO", "Res", "IAc")], group = 'gender', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Gender")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Gender
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("gender", "IaO", "Res", "IAc")], id.vars = "gender", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(gender))
+
+data %>%  ggplot( mapping = aes(x = value, y = gender, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+### Segmentation Based on Age Groups
+
+The participant's age is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. Age is contained in the data of `r ifelse(nrow(d) == length(d$ageGroup[!is.na(d$ageGroup)]), "all", length(d$ageGroup[!is.na(d$ageGroup)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the age groups.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden"))
+  st(data.frame(ageGroup = df$ageGroup))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following age groups: *`r d %>%   mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden")) %>%   count(ageGroup) %>%   filter(n > 3) %>%   pull(ageGroup) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on age groups. This allows us to observe the shifting of the competences across different generations of respondents.
+
+We show the descriptive statistics of the competence areas broken down on age groups. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different age groups. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("ageGroup", "IaO", "Res", "IAc")], group = 'ageGroup', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Age Groups
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("ageGroup", "IaO", "Res", "IAc")], id.vars = "ageGroup", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(ageGroup))
+
+data %>%  ggplot( mapping = aes(x = value, y = ageGroup, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+### Segmentation Based on the Major of the Study Program
+
+The participant's major field of studies may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The major field of studies is contained in the data of `r ifelse(nrow(d) == length(d$majorField[!is.na(d$majorField)]), "all", length(d$majorField[!is.na(d$majorField)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the fields of study.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(majorField = recode(majorField, "<hidden>" = "hidden"))
+  st(data.frame(majorField = df$majorField))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following fields of study: *`r d %>%   mutate(majorField = recode(majorField, "<hidden>" = "hidden")) %>%   count(majorField) %>%   filter(n > 3) %>%   pull(majorField) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on fields of study. This allows us to observe the shifting of the competences across different educational foci of respondents.
+
+We show the descriptive statistics of the competence areas broken down on the fields of study. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different fields of study. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| fig-cap: Competence Areas by Major Field of Studies
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(majorField)) %>%  # Remove observations with NA in 'majorField'
+  group_by(majorField) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$majorField) <- sapply(strsplit(levels(df$majorField), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("majorField", "IaO", "Res", "IAc")], id.vars = "majorField", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(majorField))
+
+data %>%  ggplot( mapping = aes(x = value, y = majorField, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+### Segmentation Based on Work Experience
+
+The participant's work experience may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The work experience is contained in the data of `r ifelse(nrow(d) == length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]), "all", length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the work experience.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden"))
+  st(data.frame(hasWorkExperience = df$hasWorkExperience))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following groups of workexperience: *`r d %>%   mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden")) %>%   count(hasWorkExperience) %>%   filter(n > 3) %>%   pull(hasWorkExperience) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on work experience. This allows us to observe the shifting of the competences across different levels of work experience of respondents.
+
+We show the descriptive statistics of the competence areas broken down on work experience. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across groups with and without work experience. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'gender'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], group = 'hasWorkExperience', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Work Experience
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'majorField'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$hasWorkExperience) <- sapply(strsplit(levels(df$hasWorkExperience), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], id.vars = "hasWorkExperience", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(hasWorkExperience))
+
+data %>%  ggplot( mapping = aes(x = value, y = hasWorkExperience, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+\NewPage
+
+\NewPage
+
+# Spain
+
+This is the analysis for all countries involved in the EICAA project: Austria, Belgium, Germany, Hungary, and Spain.
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# Country and country1 are not the country of the higher education institution 
+# We need a new variable when building the data that identifies the country of the higher education institution. 
+
+coa <- "ES" # coa = country of analysis
+
+d <- dd[dd$country == coa,]
+
+```
+
+## Summary of the Competences
+
+```{=tex}
+\definecolor{none}{RGB}{253,231,37}
+\definecolor{basic}{RGB}{94,201,98}
+\definecolor{inter}{RGB}{33,145,140}
+\definecolor{advan}{RGB}{59,82,139}
+\definecolor{expert}{RGB}{68,1,84}
+```
+In the following we summarize and visualize the competences grouped by competence areas *Ideas and Opportunities*, *Resources*, and *Into Action*. We first report the standard summary statistics (minimum, 25% quantile as *x25* -, mean, median, standard deviation, 75% quantile as *x75* -, maximum). Then we provide a plot that illustrates the distribution of the competences. The color coding helps to identify the levels *None* \textcolor{none}{$\blacksquare$}, *Basic* \textcolor{basic}{$\blacksquare$}, *Intermediate* \textcolor{inter}{$\blacksquare$}, *Advanced* \textcolor{advan}{$\blacksquare$}, *Expert* \textcolor{expert}{$\blacksquare$},
+
+Note that the numerical values of the computations and the visualization base on the raw values of the survey. The values are not normalized or standardized as in the dashboard of the EICAA competence monitor.
+
+### Competence Areas
+
+The entrepreneurship competences of the EICAA framework consist of three different competence areas that each comprise competences which we will investigate in more detail further down in the document. These competence areas are *Ideas and Opportunities*, *Resources*, and *Into Action*.
+
+#### Summary Statistics
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("Res", "IaO", "IAc")], key = "variable", value = "value")
+
+sumtable(d[,c("IaO", "Res", "IAc")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Areas", note = "Note: IaO = Ideas and Opportunities, Res = Resources, IAc = Into Action") 
+
+
+
+```
+
+#### Distributions
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("",limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Ideas and Opportunities
+
+The competence area *Ideas and Opportunities* comprises of the following competences: *Spotting opportunities* (spop), *Design orientation* (deor), *Creativity* (crea), *Vision* (visi), *Valuing ideas* (vaid), *Ethical and sustainable thinking* (sust).
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("visi","vaid","sust","spop","crea","deor")], key = "variable", value = "value")
+
+sumtable(d[,c("visi","vaid","sust","spop","crea","deor")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Ideas and Opportunities", note = "Note: visi = Vision, vaid = Valuing ideas, sust = Ethical and sustainable thinking, spop = Spotting opportunities, crea = Creativity, deor = Design orientation.")
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Resources
+
+The competence area *Resources* comprises of the following competences: *Self-awareness and self-efficacy* (self), *Motivation and perseverance* (moti), *Mobilising (financial) resources* (mobi), *Enterprising literacy* (litr), *Mobilising others* (othr), and *Digital competence* (dico).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("self","othr","moti","mobi","litr","dico")], key = "variable", value = "value")
+
+sumtable(d[,c("self", "othr","moti", "mobi","litr","dico")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Resources", note = "Note: self = Self-awareness and self-efficacy, othr = Mobilising others, moti = Motivation and perseverance, mobi = Mobilising resources, litr = Enterprising literacy, dico = Digital competences.")
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Into Action
+
+The competence area *Into Action* comprises of the following competences: *Taking the initiative* (init), *Planning and management* (plan), *Process management* (proc), *Coping with uncertainty, ambiguity, and risk* (cope), *Design validation and co-creation* (dval), *Working with others* (work), and *Learning through experience* (lepx).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("work","proc","plan","lepx","init", "dval", "cope")], key = "variable", value = "value")
+
+
+st(d[,c("work","proc","plan","lepx","init", "dval", "cope")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Into Action", note = "Note: work = Working with others, proc = Process management, plan = Planning and management, lepx = Learning through experience, init = Taking the initiative, dval = Design validation and co-creation, cope = Coping with uncertainty, ambiguity, and risk")
+
+
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+## Segmentation Analysis
+
+### Segmentation Based on Gender
+
+The participant's gender is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The gender is contained in the data of `r ifelse(nrow(d) == length(d$gender[!is.na(d$gender)]), "all", length(d$gender[!is.na(d$gender)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over their self reported gender identities.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(gender = recode(gender, "<hidden>" = "hidden"))
+  st(data.frame(Gender = df$gender))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where gender takes the following values: *`r d %>%   mutate(gender = recode(gender, "<hidden>" = "hidden")) %>%   count(gender) %>%   filter(n > 3) %>%   pull(gender) %>%   na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on gender. This allows us to observe the shifting of the competences across different gender identities.
+
+We show the descriptive statistics of the competence areas broken down on gender. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different genders. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("gender", "IaO", "Res", "IAc")], group = 'gender', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Gender")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Gender
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(gender)) %>%  # Remove observations with NA in 'gender'
+  group_by(gender) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("gender", "IaO", "Res", "IAc")], id.vars = "gender", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(gender))
+
+data %>%  ggplot( mapping = aes(x = value, y = gender, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+### Segmentation Based on Age Groups
+
+The participant's age is not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. Age is contained in the data of `r ifelse(nrow(d) == length(d$ageGroup[!is.na(d$ageGroup)]), "all", length(d$ageGroup[!is.na(d$ageGroup)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the age groups.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden"))
+  st(data.frame(ageGroup = df$ageGroup))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following age groups: *`r d %>%   mutate(ageGroup = recode(ageGroup, "<hidden>" = "hidden")) %>%   count(ageGroup) %>%   filter(n > 3) %>%   pull(ageGroup) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on age groups. This allows us to observe the shifting of the competences across different generations of respondents.
+
+We show the descriptive statistics of the competence areas broken down on age groups. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different age groups. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("ageGroup", "IaO", "Res", "IAc")], group = 'ageGroup', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Age Groups
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(ageGroup)) %>%  # Remove observations with NA in 'gender'
+  group_by(ageGroup) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+data <- melt(df[,c("ageGroup", "IaO", "Res", "IAc")], id.vars = "ageGroup", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(ageGroup))
+
+data %>%  ggplot( mapping = aes(x = value, y = ageGroup, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+### Segmentation Based on the Major of the Study Program
+
+The participant's major field of studies may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The major field of studies is contained in the data of `r ifelse(nrow(d) == length(d$majorField[!is.na(d$majorField)]), "all", length(d$majorField[!is.na(d$majorField)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the fields of study.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(majorField = recode(majorField, "<hidden>" = "hidden"))
+  st(data.frame(majorField = df$majorField))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following fields of study: *`r d %>%   mutate(majorField = recode(majorField, "<hidden>" = "hidden")) %>%   count(majorField) %>%   filter(n > 3) %>%   pull(majorField) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on fields of study. This allows us to observe the shifting of the competences across different educational foci of respondents.
+
+We show the descriptive statistics of the competence areas broken down on fields of study. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across different fields of study. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| fig-cap: Competence Areas by Major Field of Studies
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(majorField)) %>%  # Remove observations with NA in 'majorField'
+  group_by(majorField) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$majorField) <- sapply(strsplit(levels(df$majorField), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("majorField", "IaO", "Res", "IAc")], id.vars = "majorField", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(majorField))
+
+data %>%  ggplot( mapping = aes(x = value, y = majorField, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+```
+
+### Segmentation Based on Work Experience
+
+The participant's work experience may not always provided in the survey. In the sample that is the basis of the analysis we have a total of `r nrow(d)` observation. The work experience is contained in the data of `r ifelse(nrow(d) == length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]), "all", length(d$hasWorkExperience[!is.na(d$hasWorkExperience)]))` observations.
+
+In the table below we provide an overview of the distribution of the respondents over the work experience.
+
+```{r}
+#| echo: false
+#| warning: false
+df <- d %>%
+  mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden"))
+  st(data.frame(hasWorkExperience = df$hasWorkExperience))
+df <- NA
+```
+
+For the analysis in this section, we keep the observations where the respondents are in the following groups of workexperience: *`r d %>%   mutate(hasWorkExperience = recode(hasWorkExperience, "<hidden>" = "hidden")) %>%   count(hasWorkExperience) %>%   filter(n > 3) %>%   pull(hasWorkExperience) %>% na.omit()`*. All other observations are not taken into account.
+
+In this section we segment the sample based on work experience. This allows us to observe the shifting of the competences across different levels of work experience of the respondents.
+
+We show the descriptive statistics of the competence areas broken down on work experience. We abbreviate the competence areas (IaO = *Ideas and Opportunities*, Res = *Resources*, and IAc = *Into Action*). The figure below visualizes the differences of the competence distribution across groups with and without work experience. Please note that the competence levels are abbreviated by their first capital letter.
+
+```{r}
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'gender'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(gender) is less than 4
+  ungroup()
+
+st(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], group = 'hasWorkExperience', group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title="Descriptives of Competence Area by Age Group")
+```
+
+```{r}
+#| fig-cap: Competence Areas by Work Experience
+#| echo: false
+#| warning: false
+
+df <- d %>%
+  filter(!is.na(hasWorkExperience)) %>%  # Remove observations with NA in 'majorField'
+  group_by(hasWorkExperience) %>%      
+  filter(n() > 3) %>%         # Remove all observations where N(majorField) is less than 4
+  ungroup()
+
+levels(df$hasWorkExperience) <- sapply(strsplit(levels(df$hasWorkExperience), "-"), function(x) x[1])
+
+
+data <- melt(df[,c("hasWorkExperience", "IaO", "Res", "IAc")], id.vars = "hasWorkExperience", measure.vars=c("IaO", "Res", "IAc")) %>% filter(!is.na(hasWorkExperience))
+
+data %>%  ggplot( mapping = aes(x = value, y = hasWorkExperience, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("N", "B", "I", "A", "E")) +
+  facet_wrap(.~variable, scales = 'free_x') +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+
+```
+
+\NewPage
+
+\NewPage
+
+# All Countries - Employee Data
+
+```{r}
+#| echo: false
+#| warning: false
+ 
+tsize <- 12
+
+load(file="/Users/berndebersberger/Temp/EICAA-dat/d1")
+
+# Note that this is raw scores. No z-transformation is performed on this data. 
+
+dd <- d1
+d <- d1
+
+```
+
+## Summary of the Competences
+
+In the following we summarize and visualize the competences grouped by competence areas *Ideas and Opportunities*, *Resources*, and *Into Action*. We first report the standard summary statistics (minimum, 25% quantile as *x25* -, mean, median, standard deviation, 75% quantile as *x75* -, maximum). Then we provide a plot that illustrates the distribution of the competences. The color coding helps to identify the levels
+
+-   *None* \textcolor{none}{$\blacksquare$},
+
+-   *Basic* \textcolor{basic}{$\blacksquare$},
+
+-   *Intermediate* \textcolor{inter}{$\blacksquare$},
+
+-   *Advanced* \textcolor{advan}{$\blacksquare$},
+
+-   *Expert* \textcolor{expert}{$\blacksquare$},
+
+Note that the numerical values of the computations and the visualization base on the raw values of the survey. The values are not normalized or standardized as in the dashboard of the EICAA competence monitor.
+
+### Competence Areas
+
+The entrepreneurship competences of the EICAA framework consist of three different competence areas that each comprise competences which we will investigate in more detail further down in the document. These competence areas are *Ideas and Opportunities*, *Resources*, and *Into Action*.
+
+#### Summary Statistics
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("Res", "IaO", "IAc")], key = "variable", value = "value")
+
+sumtable(d[,c("IaO", "Res", "IAc")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Areas", note = "Note: IaO = Ideas and Opportunities, Res = Resources, IAc = Into Action") 
+
+
+
+```
+
+#### Distributions
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("",limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Ideas and Opportunities
+
+The competence area *Ideas and Opportunities* comprises of the following competences: *Spotting opportunities* (spop), *Design orientation* (deor), *Creativity* (crea), *Vision* (visi), *Valuing ideas* (vaid), *Ethical and sustainable thinking* (sust).
+
+```{r}
+#| echo: false
+#| warning: false
+
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("visi","vaid","sust","spop","crea","deor")], key = "variable", value = "value")
+
+sumtable(d[,c("visi","vaid","sust","spop","crea","deor")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Ideas and Opportunities", note = "Note: visi = Vision, vaid = Valuing ideas, sust = Ethical and sustainable thinking, spop = Spotting opportunities, crea = Creativity, deor = Design orientation.")
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Resources
+
+The competence area *Resources* comprises of the following competences: *Self-awareness and self-efficacy* (self), *Motivation and perseverance* (moti), *Mobilising (financial) resources* (mobi), *Enterprising literacy* (litr), *Mobilising others* (othr), and *Digital competence* (dico).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("self","othr","moti","mobi","litr","dico")], key = "variable", value = "value")
+
+sumtable(d[,c("self", "othr","moti", "mobi","litr","dico")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Resources", note = "Note: self = Self-awareness and self-efficacy, othr = Mobilising others, moti = Motivation and perseverance, mobi = Mobilising resources, litr = Enterprising literacy, dico = Digital competences.")
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
+
+### Competence Area: Into Action
+
+The competence area *Into Action* comprises of the following competences: *Taking the initiative* (init), *Planning and management* (plan), *Process management* (proc), *Coping with uncertainty, ambiguity, and risk* (cope), *Design validation and co-creation* (dval), *Working with others* (work), and *Learning through experience* (lepx).
+
+```{r}
+#| echo: false
+#| warning: false
+
+# We create a single data frame with all the variables
+data <- gather(d[,c("work","proc","plan","lepx","init", "dval", "cope")], key = "variable", value = "value")
+
+
+st(d[,c("work","proc","plan","lepx","init", "dval", "cope")], group.long = TRUE, summ=c('notNA(x)', 'min(x)', 'pctile(x)[25]', 'mean(x)','sd(x)','median(x)','pctile(x)[75]','max(x)'), summ.names=c('N', 'Min', 'x25', 'Mean', 'Sd', 'Median', 'x75', 'Max'), title = "Descriptives of the Competence Area Into Action", note = "Note: work = Working with others, proc = Process management, plan = Planning and management, lepx = Learning through experience, init = Taking the initiative, dval = Design validation and co-creation, cope = Coping with uncertainty, ambiguity, and risk")
+
+
+
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+data %>%  ggplot( mapping = aes(x = value, y = variable, fill = after_stat(x))) +
+  geom_density_ridges_gradient(rel_min_height = 0.01) + 
+  scale_fill_viridis_c(direction=-1, limits=c(1,5), guide=F) + 
+  scale_y_discrete("Competence", expand = expansion(add = c(.3,2))) + 
+  scale_x_continuous("", limits=c(1,5), breaks = 1:5, labels =c("None", "Basic", "Intermed.", "Advanced", "Expert")) +
+  theme(text = element_text(size = tsize), panel.background = element_blank()) 
+
+
+```
